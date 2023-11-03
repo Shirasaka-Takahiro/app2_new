@@ -176,7 +176,21 @@ def user_detail(id):
     user = User.query.get(id)
     return render_template('testapp/user_detail.html', user=user)
 
-UPLOAD_DIR = 'home/vagrant/.ssh/'
+@app.route('/tf_init', methods=['POST', 'GET'])
+@login_required
+def tf_init():
+    if request.method == 'POST':
+        try:
+            # terraform initを実行
+            init_result = subprocess.run(['terraform', 'init'], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+            return f'Terraform init output: {init_result.stdout}'
+        except subprocess.CalledProcessError as e:
+            return f'Error running Terraform init: {e.stderr}'
+    return render_template('testapp/tf_exec.html')
+
+
+UPLOAD_DIR = '/home/vagrant/.ssh/example.pub'
 
 ##Terraform実行機能
 @app.route('/tf_plan', methods=['POST', 'GET'])
@@ -226,12 +240,12 @@ def tf_plan():
             "secret_key": secret_key
         }
 
-        with open('/home/vagrant/app2/terrafomr_dir/alb_ec2_terraform/env/dev/terraform.tfvars.json', 'w') as f:
+        with open('/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev/terraform.tfvars.json', 'w') as f:
             json.dump(tf_vars, f)
         
-        subprocess.run(['terraform', 'init'], cwd='/home/vagrant/app2/terrafomr_dir/alb_ec2_terraform/env/dev')
+        #subprocess.run(['terraform', 'init'], cwd='/home/vagrant/app2/terrafomr_dir/alb_ec2_terraform/env/dev')
         # コマンドを実行し、標準出力をバイト文字列として取得
-        result = subprocess.Popen(['terraform', 'plan'], cwd='/home/vagrant/app2/terrafomr_dir/alb_ec2_terraform/env/dev', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        result = subprocess.Popen(['terraform', 'plan'], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = result.communicate()
 
         # stdoutにはバイト文字列が含まれるので、デコードして文字列に変換
@@ -243,23 +257,23 @@ def tf_plan():
         print(stderr_str)
     return render_template('testapp/tf_exec.html')
 
-@app.route('/tf_apply', methods=['POST'])
-@login_required
-def tf_apply():
-    if request.method == 'POST':
+#@app.route('/tf_apply', methods=['POST'])
+#@login_required
+#def tf_apply():
+#    if request.method == 'POST':
         # Terraform apply実行
-        result = subprocess.run(['terraform', 'apply', '-auto-approve'], cwd='/home/vagrant/app2/terrafomr_dir/alb_ec2_terraform/env/dev', capture_output=True, text=True)
-        return result.stdout
-    return render_template('testapp/tf_exec.html')
+#        result = subprocess.run(['terraform', 'apply', '-auto-approve'], cwd='/home/vagrant/_new/terrafomr_dir/alb_ec2_terraform/env/dev', capture_output=True, text=True)
+#        return result.stdout
+ #   return render_template('testapp/tf_exec.html')
 
-@app.route('/tf_destroy', methods=['POST'])
-@login_required
-def tf_destroy():
-    if request.method == 'POST':
+#@app.route('/tf_destroy', methods=['POST'])
+#@login_required
+#def tf_destroy():
+#    if request.method == 'POST':
         # terraform destroy実行
-        result = subprocess.run(['terraform', 'destroy', '-auto-approve'], cwd='/home/vagrant/app2/terrafomr_dir/alb_ec2_terraform/env/dev', capture_output=True, text=True)
-        return result.stdout
-    return render_template('testapp/tf_exec.html')
+#        result = subprocess.run(['terraform', 'destroy', '-auto-approve'], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', capture_output=True, text=True)
+#        return result.stdout
+#    return render_template('testapp/tf_exec.html')
 
 @app.route('/tf_exec_output')
 @login_required

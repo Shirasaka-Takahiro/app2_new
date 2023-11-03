@@ -11,11 +11,14 @@ provider "aws" {
 
 terraform {
   required_version = "~> 1.3.6"
-  backend "s3" {
-    bucket  = "example-dev-tfstate-bucket"
-    region  = "ap-northeast-1"
-    key     = "dev.tfstate"
-    profile = "terraform-user"
+  #backend "s3" {
+  #  bucket  = "example-dev-tfstate-bucket"
+  #  region  = "ap-northeast-1"
+  #  key     = "dev.tfstate"
+  #  profile = "terraform-user"
+  #}
+  backend "local" {
+     path   = "terraform.tfstate"
   }
   required_providers {
     aws = {
@@ -38,7 +41,7 @@ module "dev" {
   private_subnet_ids = module.dev.private_subnet_ids
   ami                = var.ami
   key_name           = var.key_name
-  public_key_path    = var.public_key_path
+  #public_key_path    = var.public_key_path
   instance_type      = var.instance_type
   volume_type        = var.volume_type
   volume_size        = var.volume_size

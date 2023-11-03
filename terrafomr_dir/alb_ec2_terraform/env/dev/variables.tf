@@ -102,9 +102,5 @@ variable "volume_size" {
 variable "key_name" {
   description = "key name of the key pair"
   type        = string
-}
-
-variable "public_key_path" {
-  description = "key path of the public key. Example: ~/.ssh/terraform.pub"
-  type        = string
+  default     = "example.pub"
 }
