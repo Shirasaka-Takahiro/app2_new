@@ -11,6 +11,7 @@ from flask_login import UserMixin, LoginManager, login_user, logout_user, login_
 import subprocess
 import os
 import json
+import re
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -176,37 +177,113 @@ def user_detail(id):
     user = User.query.get(id)
     return render_template('testapp/user_detail.html', user=user)
 
-@app.route('/tf_init', methods=['POST', 'GET'])
+
+#AWSProfileの作成
+@app.route('/create_aws_profile', methods=['GET', 'POST'])
+def create_aws_profile():
+    if request.method == 'POST':
+        # フォームから入力された情報を取得
+        profile_name = request.form['profile_name']
+        aws_access_key = request.form['aws_access_key']
+        aws_secret_key = request.form['aws_secret_key']
+        region = request.form['region']
+        output_format = request.form['output_format']
+
+        # デフォルトリージョンと出力形式を設定
+        try:
+            subprocess.run([
+                'aws', 'configure', 'set', 'region', region, '--profile', profile_name
+            ])
+            subprocess.run([
+                'aws', 'configure', 'set', 'output', output_format, '--profile', profile_name
+            ])
+        except Exception as e:
+            flash(f'デフォルトリージョンと出力形式の設定中にエラーが発生しました: {str(e)}', 'error')
+
+        # AWSプロファイルの作成
+        try:
+            subprocess.run([
+                'aws', 'configure', 'set', 'aws_access_key_id', aws_access_key, '--profile', profile_name
+            ])
+            subprocess.run([
+                'aws', 'configure', 'set', 'aws_secret_access_key', aws_secret_key, '--profile', profile_name
+            ])
+            flash('AWSプロファイルが作成され、デフォルトリージョンおよび出力形式が設定されました', 'success')
+        except Exception as e:
+            flash(f'AWSプロファイルの作成中にエラーが発生しました: {str(e)}', 'error')
+
+        return redirect(url_for('create_aws_profile'))
+
+    return render_template('testapp/create_aws_profile.html')
+
+@app.route('/tf_exec', methods=['GET'])
+@login_required
+def tf_exec():
+    return render_template('testapp/tf_exec.html')
+
+def format_terraform_init_output(output):
+    # 改行で分割
+    lines = output.decode('utf-8').split('\n')
+    formatted_lines = []
+    for line in lines:
+        # ANSIエスケープコードを削除
+        line = re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', '', line)
+        # 空白を削除してから行を追加
+        formatted_lines.append(line.strip())
+    
+    # 整形された行を連結して整形された出力を生成
+    formatted_output = "<p>{}</p>".format('</p><p>'.join(formatted_lines))
+    return formatted_output
+
+@app.route('/tf_exec/tf_init', methods=['POST', 'GET'])
 @login_required
 def tf_init():
+    #return render_template('testapp/tf_init.html')
     if request.method == 'POST':
         try:
             # terraform initを実行
             init_result = subprocess.run(['terraform', 'init'], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-            return f'Terraform init output: {init_result.stdout}'
-        except subprocess.CalledProcessError as e:
-            return f'Error running Terraform init: {e.stderr}'
-    return render_template('testapp/tf_exec.html')
+            # Terraform initの出力を整形してファイルに書き込む
+            formatted_output = format_terraform_init_output(init_result.stdout)
 
+            # Terraform initの出力をファイルに書き込む
+            with open('/home/vagrant/app2_new/blog/templates/testapp/init_output.html', 'w') as init_output_file:
+                init_output_file.write(formatted_output)
+
+            flash('Initが成功しました', 'success')
+            return render_template('testapp/tf_init.html')
+
+        except subprocess.CalledProcessError as e:
+            # エラーメッセージを整形してファイルに書き込む
+            error_output = e.stderr.decode('utf-8')
+            formatted_error_output = format_terraform_init_output(error_output)
+
+            with open('/home/vagrant/app2_new/blog/templates/testapp/init_output.html', 'w') as init_output_file:
+                init_output_file.write(formatted_error_output)
+
+            flash('Initに失敗しました。実行結果を確認してください', 'error')
+            return render_template('testapp/tf_init.html')
+    return render_template('testapp/tf_init.html')
+
+@app.route('/view_init_output')
+@login_required
+def view_init_output():
+    try:
+        with open('/home/vagrant/app2_new/blog/templates/testapp/init_output.html', 'r') as init_output_file:
+            init_output = init_output_file.read()
+        return render_template('testapp/init_output.html', init_output=init_output)
+    except FileNotFoundError:
+        flash('実行結果ファイルが見つかりません', 'error')
+        return redirect(url_for('tf_init'))
 
 UPLOAD_DIR = '/home/vagrant/.ssh/example.pub'
 
 ##Terraform実行機能
-@app.route('/tf_plan', methods=['POST', 'GET'])
+@app.route('/tf_exec/tf_plan', methods=['POST', 'GET'])
 @login_required
 def tf_plan():
     if request.method == 'POST':
-        ##AWS環境変数設定
-        #aws_access_key = request.form.get('aws_access_key')
-        #aws_secret_key = request.form.get('aws_secret_key')
-        #aws_region = request.form.get('aws_region')
-
-        # 入力された値を環境変数としてセット
-        #os.environ['AWS_ACCESS_KEY_ID'] = aws_access_key
-        #os.environ['AWS_SECRET_ACCESS_KEY'] = aws_secret_key
-        #os.environ['AWS_DEFAULT_REGION'] = aws_region
-        #flash('環境変数を設定しました', 'success')
 
         UPLOAD_DIR = '/home/vagrant/.ssh/'
         #public_key_file = request.files['public_key']
@@ -219,11 +296,6 @@ def tf_plan():
             #public_key_file.save(save_path)
             with open(save_path, 'w') as f:
                 f.write(public_key)
-        
-        # 必要なフィールドのいずれかが設定されていない場合、エラーメッセージをフラッシュ
-        #if not aws_access_key or not aws_secret_key or not aws_region or not public_key:
-        #    flash("AWS Access Key、AWS Secret Key、AWS Region、または公開鍵ファイルが入力されていません。", "error")
-        #    return redirect(url_for('tf_exec'))
 
         ##terraform.tfvarsの作成
         project = request.form.get('project')
@@ -243,7 +315,6 @@ def tf_plan():
         with open('/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev/terraform.tfvars.json', 'w') as f:
             json.dump(tf_vars, f)
         
-        #subprocess.run(['terraform', 'init'], cwd='/home/vagrant/app2/terrafomr_dir/alb_ec2_terraform/env/dev')
         # コマンドを実行し、標準出力をバイト文字列として取得
         result = subprocess.Popen(['terraform', 'plan'], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = result.communicate()
@@ -255,34 +326,22 @@ def tf_plan():
         # stdout_strには標準出力の文字列が、stderr_strには標準エラー出力の文字列が含まれる
         print(stdout_str)
         print(stderr_str)
+    return render_template('testapp/tf_plan.html')
+
+@app.route('/tf_exec/tf_apply', methods=['POST'])
+@login_required
+def tf_apply():
+    if request.method == 'POST':
+        # Terraform apply実行
+        result = subprocess.run(['terraform', 'apply', '-auto-approve'], cwd='/home/vagrant/_new/terrafomr_dir/alb_ec2_terraform/env/dev', capture_output=True, text=True)
+        return result.stdout
     return render_template('testapp/tf_exec.html')
 
-#@app.route('/tf_apply', methods=['POST'])
-#@login_required
-#def tf_apply():
-#    if request.method == 'POST':
-        # Terraform apply実行
-#        result = subprocess.run(['terraform', 'apply', '-auto-approve'], cwd='/home/vagrant/_new/terrafomr_dir/alb_ec2_terraform/env/dev', capture_output=True, text=True)
-#        return result.stdout
- #   return render_template('testapp/tf_exec.html')
-
-#@app.route('/tf_destroy', methods=['POST'])
-#@login_required
-#def tf_destroy():
-#    if request.method == 'POST':
-        # terraform destroy実行
-#        result = subprocess.run(['terraform', 'destroy', '-auto-approve'], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', capture_output=True, text=True)
-#        return result.stdout
-#    return render_template('testapp/tf_exec.html')
-
-@app.route('/tf_exec_output')
+@app.route('/tf_exec/tf_destroy', methods=['POST'])
 @login_required
-def execute_with_output(command, cwd, output_file):
-    with open(output_file, 'w') as f:
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=cwd, text=True)
-        while True:
-            line = process.stdout.readline()
-            if not line:
-                break
-            f.write(line)
-            f.flush()
+def tf_destroy():
+    if request.method == 'POST':
+        # terraform destroy実行
+        result = subprocess.run(['terraform', 'destroy', '-auto-approve'], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', capture_output=True, text=True)
+        return result.stdout
+    return render_template('testapp/tf_exec.html')

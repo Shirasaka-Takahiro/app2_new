@@ -21,7 +21,7 @@
           <a class="nav-link" href="{{ url_for('employee_list') }}">従業員一覧</a>
           <a class="nav-link" href="{{ url_for('add_employee') }}">新規従業員登録</a>
           <a class="nav-link" href="{{ url_for('sample_form') }}">ジャンケンアプリ</a>
-          <a class="nav-link" href="{{ url_for('tf_plan') }}">Terraform実行画面</a>
+          <a class="nav-link" href="{{ url_for('tf_exec') }}">Terraform実行画面</a>
           <a class="nav-link" href="{{ url_for('logout') }}">ログアウト</a>
           {% endif %}
           {% if not current_user.is_authenticated %}

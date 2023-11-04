@@ -11,45 +11,12 @@
 <body>
     <div class="container mt-5">
         <h1 class="mb-4">Terraform GUI</h1>
-        <form method="POST">
-            <div class="form-group">
-                <label for="aws_access_key">AWS Access Key:</label>
-                <input type="text" class="form-control" id="aws_access_key" name="aws_access_key" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="aws_secret_key">AWS Secret Key:</label>
-                <input type="text" class="form-control" id="aws_secret_key" name="aws_secret_key" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="aws_region">AWS Region:</label>
-                <input type="text" class="form-control" id="aws_region" name="aws_region" required>
-            <div class="form-group">
-                <label for="project">Project:</label>
-                <input type="text" class="form-control" id="project" name="project" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="env">Environment:</label>
-                <input type="text" class="form-control" id="env" name="env" required>
-            </div>
-
-            <form method="POST" enctype="multipart/form-data">
-                <!-- 他のフォームフィールド -->
-                <div class="form-group">
-                    <label for="public_key">公開鍵:</label>
-                    <textarea class="form-control" id="public_key" name="public_key"></textarea>
-                </div>
-            </form>
-            
-            <button type="submit" class="btn btn-warning" name="action" value="init">Init</button>
-            <button type="submit" class="btn btn-primary" name="action" value="plan">Plan</button>
-            <button type="submit" class="btn btn-success" name="action" value="apply">Apply</button>
-            <button type="submit" class="btn btn-danger" name="action" value="destroy">Destroy</button>
-        </form>
+        <a class="" href="{{ url_for('create_aws_profile') }}">AWS Profile 作成画面へ移動する</a><br>
+        <a class="" href="{{ url_for('tf_init') }}">Terraform Init 実行画面へ移動する</a><br>
+        <a class="" href="{{ url_for('tf_plan') }}">Terraform Plan 実行画面へ移動する</a><br>
+        <a class="" href="{{ url_for('tf_apply') }}">Terraform Apply 実行画面へ移動する</a><br>
+        <a class="" href="{{ url_for('tf_destroy') }}">Terraform Destroy 実行画面へ移動する</a><br>
     </div>
-    <a class="" href="{{ url_for('execute_with_output') }}">実行結果</a>
 </body>
 </html>
 {% endblock %}
