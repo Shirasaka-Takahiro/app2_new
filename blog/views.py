@@ -221,7 +221,7 @@ def create_aws_profile():
 def tf_exec():
     return render_template('testapp/tf_exec.html')
 
-def format_terraform_init_output(output):
+def format_terraform_output(output):
     # 改行で分割
     lines = output.decode('utf-8').split('\n')
     formatted_lines = []
@@ -238,14 +238,13 @@ def format_terraform_init_output(output):
 @app.route('/tf_exec/tf_init', methods=['POST', 'GET'])
 @login_required
 def tf_init():
-    #return render_template('testapp/tf_init.html')
     if request.method == 'POST':
         try:
             # terraform initを実行
             init_result = subprocess.run(['terraform', 'init'], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
             # Terraform initの出力を整形してファイルに書き込む
-            formatted_output = format_terraform_init_output(init_result.stdout)
+            formatted_output = format_terraform_output(init_result.stdout)
 
             # Terraform initの出力をファイルに書き込む
             with open('/home/vagrant/app2_new/blog/templates/testapp/init_output.html', 'w') as init_output_file:
@@ -257,7 +256,7 @@ def tf_init():
         except subprocess.CalledProcessError as e:
             # エラーメッセージを整形してファイルに書き込む
             error_output = e.stderr.decode('utf-8')
-            formatted_error_output = format_terraform_init_output(error_output)
+            formatted_error_output = format_terraform_output(error_output)
 
             with open('/home/vagrant/app2_new/blog/templates/testapp/init_output.html', 'w') as init_output_file:
                 init_output_file.write(formatted_error_output)
@@ -266,6 +265,7 @@ def tf_init():
             return render_template('testapp/tf_init.html')
     return render_template('testapp/tf_init.html')
 
+##Terraform Initの実行結果確認
 @app.route('/view_init_output')
 @login_required
 def view_init_output():
@@ -279,63 +279,146 @@ def view_init_output():
 
 UPLOAD_DIR = '/home/vagrant/.ssh/example.pub'
 
-##Terraform実行機能
+##Terraform Plan 実行機能
 @app.route('/tf_exec/tf_plan', methods=['POST', 'GET'])
 @login_required
 def tf_plan():
     if request.method == 'POST':
+        try:
+            UPLOAD_DIR = '/home/vagrant/.ssh/'
+            public_key = request.form.get('public_key')
+            if public_key:
+                # セキュアなファイル名を生成して保存
+                new_filename = 'example.pub'
+                save_path = os.path.join(UPLOAD_DIR, new_filename)
+                with open(save_path, 'w') as f:
+                    f.write(public_key)
 
-        UPLOAD_DIR = '/home/vagrant/.ssh/'
-        #public_key_file = request.files['public_key']
-        public_key = request.form.get('public_key')
-        #if public_key_file:
-        if public_key:
-            # セキュアなファイル名を生成して保存
-            new_filename = 'example.pub'
-            save_path = os.path.join(UPLOAD_DIR, new_filename)
-            #public_key_file.save(save_path)
-            with open(save_path, 'w') as f:
-                f.write(public_key)
+            ##terraform.tfvarsの作成
+            project = request.form.get('project')
+            env = request.form.get('env')
+            access_key = request.form.get('aws_access_key')
+            secret_key = request.form.get('aws_secret_key')
 
-        ##terraform.tfvarsの作成
-        project = request.form.get('project')
-        env = request.form.get('env')
-        access_key = request.form.get('aws_access_key')
-        secret_key = request.form.get('aws_secret_key')
+            tf_vars = {
+                "general_config": {
+                    "project": project,
+                    "env": env
+                },
+                "access_key": access_key,
+                "secret_key": secret_key
+            }
 
-        tf_vars = {
-            "general_config": {
-                "project": project,
-                "env": env
-            },
-            "access_key": access_key,
-            "secret_key": secret_key
-        }
-
-        with open('/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev/terraform.tfvars.json', 'w') as f:
-            json.dump(tf_vars, f)
+            with open('/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev/terraform.tfvars.json', 'w') as f:
+                json.dump(tf_vars, f)
         
-        # コマンドを実行し、標準出力をバイト文字列として取得
-        result = subprocess.Popen(['terraform', 'plan'], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = result.communicate()
+            # コマンドを実行し、標準出力をバイト文字列として取得
+            plan_result = subprocess.run(['terraform', 'plan'], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        # stdoutにはバイト文字列が含まれるので、デコードして文字列に変換
-        stdout_str = stdout.decode('utf-8')
-        stderr_str = stderr.decode('utf-8')
+            # Terraform planの出力を整形してファイルに書き込む
+            formatted_output = format_terraform_output(plan_result.stdout)
 
-        # stdout_strには標準出力の文字列が、stderr_strには標準エラー出力の文字列が含まれる
-        print(stdout_str)
-        print(stderr_str)
+            # Terraform planの出力をファイルに書き込む
+            with open('/home/vagrant/app2_new/blog/templates/testapp/plan_output.html', 'w') as plan_output_file:
+                plan_output_file.write(formatted_output)
+
+                flash('Planが成功しました', 'success')
+                return render_template('testapp/tf_plan.html')
+
+        except subprocess.CalledProcessError as e:
+            # エラーメッセージを整形してファイルに書き込む
+            error_output = e.stderr.decode('utf-8')
+            formatted_error_output = format_terraform_output(error_output)
+
+            with open('/home/vagrant/app2_new/blog/templates/testapp/plan_output.html', 'w') as plan_output_file:
+                plan_output_file.write(formatted_error_output)
+
+            flash('Planに失敗しました。実行結果を確認してください', 'error')
+            return render_template('testapp/tf_plan.html')
     return render_template('testapp/tf_plan.html')
 
-@app.route('/tf_exec/tf_apply', methods=['POST'])
+##Terraform Planの実行結果確認
+@app.route('/view_plan_output')
+@login_required
+def view_plan_output():
+    try:
+        with open('/home/vagrant/app2_new/blog/templates/testapp/plan_output.html', 'r') as plan_output_file:
+            plan_output = plan_output_file.read()
+        return render_template('testapp/plan_output.html', plan_output=plan_output)
+    except FileNotFoundError:
+        flash('実行結果ファイルが見つかりません', 'error')
+        return redirect(url_for('tf_plan'))
+
+
+##Terraform Apply 実行機能
+@app.route('/tf_exec/tf_apply', methods=['POST', 'GET'])
 @login_required
 def tf_apply():
     if request.method == 'POST':
-        # Terraform apply実行
-        result = subprocess.run(['terraform', 'apply', '-auto-approve'], cwd='/home/vagrant/_new/terrafomr_dir/alb_ec2_terraform/env/dev', capture_output=True, text=True)
-        return result.stdout
-    return render_template('testapp/tf_exec.html')
+        try:
+            UPLOAD_DIR = '/home/vagrant/.ssh/'
+            public_key = request.form.get('public_key')
+            if public_key:
+                # セキュアなファイル名を生成して保存
+                new_filename = 'example.pub'
+                save_path = os.path.join(UPLOAD_DIR, new_filename)
+                with open(save_path, 'w') as f:
+                    f.write(public_key)
+
+            ##terraform.tfvarsの作成
+            project = request.form.get('project')
+            env = request.form.get('env')
+            access_key = request.form.get('aws_access_key')
+            secret_key = request.form.get('aws_secret_key')
+
+            tf_vars = {
+                "general_config": {
+                    "project": project,
+                    "env": env
+                },
+                "access_key": access_key,
+                "secret_key": secret_key
+            }
+
+            with open('/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev/terraform.tfvars.json', 'w') as f:
+                json.dump(tf_vars, f)
+        
+            # コマンドを実行し、標準出力をバイト文字列として取得
+            apply_result = subprocess.run(['terraform', 'apply', '-auto-approve'], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+            # Terraform Applyの出力を整形してファイルに書き込む
+            formatted_output = format_terraform_output(apply_result.stdout)
+
+            # Terraform Apllyの出力をファイルに書き込む
+            with open('/home/vagrant/app2_new/blog/templates/testapp/apply_output.html', 'w') as apply_output_file:
+                apply_output_file.write(formatted_output)
+
+                flash('Applyが成功しました', 'success')
+                return render_template('testapp/tf_apply.html')
+
+        except subprocess.CalledProcessError as e:
+            # エラーメッセージを整形してファイルに書き込む
+            error_output = e.stderr.decode('utf-8')
+            formatted_error_output = format_terraform_output(error_output)
+
+            with open('/home/vagrant/app2_new/blog/templates/testapp/apply_output.html', 'w') as apply_output_file:
+                apply_output_file.write(formatted_error_output)
+
+            flash('Applyに失敗しました。実行結果を確認してください', 'error')
+            return render_template('testapp/tf_apply.html')
+    return render_template('testapp/tf_apply.html')
+
+##Terraform Applyの実行結果確認
+@app.route('/view_apply_output')
+@login_required
+def view_apply_output():
+    try:
+        with open('/home/vagrant/app2_new/blog/templates/testapp/apply_output.html', 'r') as apply_output_file:
+            apply_output = apply_output_file.read()
+        return render_template('testapp/apply_output.html', apply_output=apply_output)
+    except FileNotFoundError:
+        flash('実行結果ファイルが見つかりません', 'error')
+        return redirect(url_for('tf_apply'))
 
 @app.route('/tf_exec/tf_destroy', methods=['POST'])
 @login_required
