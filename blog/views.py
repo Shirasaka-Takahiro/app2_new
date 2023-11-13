@@ -423,7 +423,7 @@ def view_apply_output():
 ##Terraform Destroy 実行機能
 @app.route('/tf_exec/tf_destroy', methods=['POST', 'GET'])
 @login_required
-def tf_apply():
+def tf_destroy():
     if request.method == 'POST':
         try:
             UPLOAD_DIR = '/home/vagrant/.ssh/'
