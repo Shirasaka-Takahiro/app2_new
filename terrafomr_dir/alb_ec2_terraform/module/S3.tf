@@ -35,10 +35,10 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "bucket_server_sid
 }
 
 ##Bucket ACL
-resource "aws_s3_bucket_acl" "bucket_acl" {
-  bucket = aws_s3_bucket.bucket_alb_access_log.id
-  acl    = "private"
-}
+#resource "aws_s3_bucket_acl" "bucket_acl" {
+#  bucket = aws_s3_bucket.bucket_alb_access_log.id
+#  acl    = "private"
+#}
 
 ##Bucket Policy
 data "aws_elb_service_account" "main" {}

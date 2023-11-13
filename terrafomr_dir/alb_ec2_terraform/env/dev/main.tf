@@ -17,9 +17,9 @@ terraform {
   #  key     = "dev.tfstate"
   #  profile = "terraform-user"
   #}
-  backend "local" {
-     path   = "terraform.tfstate"
-  }
+  #backend "local" {
+  #   path   = "terraform.tfstate"
+  #}
   required_providers {
     aws = {
       source  = "hashicorp/aws"
