@@ -420,11 +420,72 @@ def view_apply_output():
         flash('実行結果ファイルが見つかりません', 'error')
         return redirect(url_for('tf_apply'))
 
-@app.route('/tf_exec/tf_destroy', methods=['POST'])
+##Terraform Destroy 実行機能
+@app.route('/tf_exec/tf_destroy', methods=['POST', 'GET'])
 @login_required
-def tf_destroy():
+def tf_apply():
     if request.method == 'POST':
-        # terraform destroy実行
-        result = subprocess.run(['terraform', 'destroy', '-auto-approve'], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', capture_output=True, text=True)
-        return result.stdout
-    return render_template('testapp/tf_exec.html')
+        try:
+            UPLOAD_DIR = '/home/vagrant/.ssh/'
+            public_key = request.form.get('public_key')
+            if public_key:
+                # セキュアなファイル名を生成して保存
+                new_filename = 'example.pub'
+                save_path = os.path.join(UPLOAD_DIR, new_filename)
+                with open(save_path, 'w') as f:
+                    f.write(public_key)
+
+            ##terraform.tfvarsの作成
+            project = request.form.get('project')
+            env = request.form.get('env')
+            access_key = request.form.get('aws_access_key')
+            secret_key = request.form.get('aws_secret_key')
+
+            tf_vars = {
+                "general_config": {
+                    "project": project,
+                    "env": env
+                },
+                "access_key": access_key,
+                "secret_key": secret_key
+            }
+
+            with open('/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev/terraform.tfvars.json', 'w') as f:
+                json.dump(tf_vars, f)
+        
+            # コマンドを実行し、標準出力をバイト文字列として取得
+            destroy_result = subprocess.run(['terraform', 'destroy', '-auto-approve'], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+            # Terraform Applyの出力を整形してファイルに書き込む
+            formatted_output = format_terraform_output(destroy_result.stdout)
+
+            # Terraform Apllyの出力をファイルに書き込む
+            with open('/home/vagrant/app2_new/blog/templates/testapp/destroy_output.html', 'w') as destroy_output_file:
+                destroy_output_file.write(formatted_output)
+
+                flash('Destroyが成功しました', 'success')
+                return render_template('testapp/tf_destroy.html')
+
+        except subprocess.CalledProcessError as e:
+            # エラーメッセージを整形してファイルに書き込む
+            error_output = e.stderr.decode('utf-8')
+            formatted_error_output = format_terraform_output(error_output)
+
+            with open('/home/vagrant/app2_new/blog/templates/testapp/destroy_output.html', 'w') as destroy_output_file:
+                destroy_output_file.write(formatted_error_output)
+
+            flash('Destroyに失敗しました。実行結果を確認してください', 'error')
+            return render_template('testapp/tf_destroy.html')
+    return render_template('testapp/tf_destroy.html')
+
+##Terraform Destroyの実行結果確認
+@app.route('/view_destroy_output')
+@login_required
+def view_destroy_output():
+    try:
+        with open('/home/vagrant/app2_new/blog/templates/testapp/destroy_output.html', 'r') as destroy_output_file:
+            destroy_output = destroy_output_file.read()
+        return render_template('testapp/destroy_output.html', destroy_output=destroy_output)
+    except FileNotFoundError:
+        flash('実行結果ファイルが見つかりません', 'error')
+        return redirect(url_for('tf_destroy'))

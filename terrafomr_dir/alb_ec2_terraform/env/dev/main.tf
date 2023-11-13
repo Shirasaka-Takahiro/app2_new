@@ -1,10 +1,10 @@
 provider "aws" {
-  profile = "terraform-user"
+  profile = "terraform_python_test"
   region  = var.regions["tokyo"]
 }
 
 provider "aws" {
-  profile = "terraform-user"
+  profile = "terraform_python_test"
   alias   = "us-east-1"
   region  = var.regions["virginia"]
 }
