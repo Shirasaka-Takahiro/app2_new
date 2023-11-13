@@ -216,6 +216,59 @@ def create_aws_profile():
 
     return render_template('testapp/create_aws_profile.html')
 
+#Terraform Workspaceの作成
+@app.route('/create_tf_workspace', methods=['GET', 'POST'])
+def create_tf_workspace():
+    if request.method == 'POST':
+        # フォームから入力された情報を取得
+        workspace_name = request.form['workspace_name']
+
+        # デフォルトリージョンと出力形式を設定
+        try:
+            # ワークスペースの作成
+            subprocess.run(['terraform', 'workspace', 'new', workspace_name], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', check=True)
+            flash(f'Terraform Workspace "{workspace_name}"が作成されました', 'success')
+        except Exception as e:
+            flash(f'Workspaceの作成中にエラーが発生しました: {str(e)}', 'error')
+        return redirect(url_for('create_tf_workspace'))
+    
+    workspaces = get_terraform_workspaces()
+    active_workspace = get_active_workspace()
+    return render_template('testapp/create_tf_workspace.html', workspaces=workspaces, active_workspace=active_workspace)
+
+##アクティブなTerraform Workspaceの切り替え
+@app.route('/switch_workspace', methods=['POST'])
+def switch_workspace():
+    if request.method == 'POST':
+        selected_workspace = request.form['selected_workspace']
+        try:
+            subprocess.run(['terraform', 'workspace', 'select', selected_workspace], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', check=True)
+            flash(f'アクティブなワークスペースを {selected_workspace} に切り替えました', 'success')
+        except Exception as e:
+            flash(f'ワークスペースの切り替え中にエラーが発生しました: {str(e)}', 'error')
+        return redirect(url_for('create_tf_workspace'))
+
+##Terraform Workspaceの一覧を取得
+def get_terraform_workspaces():
+    try:
+        result = subprocess.run(['terraform', 'workspace', 'list'], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        workspaces = result.stdout.strip().split('\n')
+        return workspaces
+    except Exception as e:
+        flash(f'Terraformワークスペースの一覧取得中にエラーが発生しました: {str(e)}', 'error')
+        return []
+
+##Activeなワークスペースを取得
+def get_active_workspace():
+    try:
+        result = subprocess.run(['terraform', 'workspace', 'show'], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        active_workspace = result.stdout.strip()
+        return active_workspace
+    except Exception as e:
+        flash(f'アクティブなワークスペースの取得中にエラーが発生しました: {str(e)}', 'error')
+        return None
+
+
 @app.route('/tf_exec', methods=['GET'])
 @login_required
 def tf_exec():

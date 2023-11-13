@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Terraform Workspace</title>
+</head>
+<body>
+    <h1>Create Terraform Workspace</h1>
+    <div class="container mt-5">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul class="messages">
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="workspace_name">Workspace Name:</label>
+                <input type="text" class="form-control" id="workspace_name" name="workspace_name" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Create Workspace</button>
+        </form>
+
+        <h2>Existing Workspaces</h2>
+        <ul>
+            {% for workspace in workspaces %}
+                <li>{{ workspace }}</li>
+            {% endfor %}
+        </ul>
+
+        <h2>Active Workspace</h2>
+        <p>{{ active_workspace }}</p>
+
+        <form method="POST" action="{{ url_for('switch_workspace') }}">
+            <label for="selected_workspace">Switch to Workspace:</label>
+            {% for workspace in workspaces %}
+            <div class="form-check">
+                <input type="radio" class="form-check-input" id="workspace_{{ workspace }}" name="selected_workspace" value="{{ workspace.strip() }}">
+                <label class="form-check-label" for="workspace_{{ workspace }}">{{ workspace }}</label>
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">Switch Workspace</button>
+        </form>
+
+        <a class="" href="{{ url_for('tf_exec') }}">戻る</a>
+    </div>
+
+</body>
+</html>
+{% endblock %}
