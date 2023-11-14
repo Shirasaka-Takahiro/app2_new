@@ -7,6 +7,18 @@ variable "general_config" {
   }
 }
 
+##Access Key
+variable "access_key" {
+  description = "Access Key"
+  type        = string
+}
+
+##Secret Key
+variable "secret_key" {
+  description = "Secret Key"
+  type        = string
+}
+
 ##Regions
 variable "regions" {
   default = {

@@ -1,6 +1,8 @@
 provider "aws" {
   profile = "terraform_python_test"
   region  = var.regions["tokyo"]
+  access_key = var.access_key
+  secret_key = var.secret_key
 }
 
 provider "aws" {
@@ -11,15 +13,6 @@ provider "aws" {
 
 terraform {
   required_version = "~> 1.3.6"
-  #backend "s3" {
-  #  bucket  = "example-dev-tfstate-bucket"
-  #  region  = "ap-northeast-1"
-  #  key     = "dev.tfstate"
-  #  profile = "terraform-user"
-  #}
-  #backend "local" {
-  #   path   = "terraform.tfstate"
-  #}
   required_providers {
     aws = {
       source  = "hashicorp/aws"
