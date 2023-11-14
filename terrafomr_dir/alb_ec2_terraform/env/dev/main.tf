@@ -1,12 +1,12 @@
 provider "aws" {
-  profile = "terraform_python_test"
+  #profile = "terraform_python_test"
   region  = var.regions["tokyo"]
   access_key = var.access_key
   secret_key = var.secret_key
 }
 
 provider "aws" {
-  profile = "terraform_python_test"
+  #profile = "terraform_python_test"
   alias   = "us-east-1"
   region  = var.regions["virginia"]
 }
@@ -34,7 +34,6 @@ module "dev" {
   private_subnet_ids = module.dev.private_subnet_ids
   ami                = var.ami
   key_name           = var.key_name
-  #public_key_path    = var.public_key_path
   instance_type      = var.instance_type
   volume_type        = var.volume_type
   volume_size        = var.volume_size
