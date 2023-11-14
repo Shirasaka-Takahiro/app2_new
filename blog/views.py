@@ -268,7 +268,6 @@ def get_active_workspace():
         flash(f'アクティブなワークスペースの取得中にエラーが発生しました: {str(e)}', 'error')
         return None
 
-
 @app.route('/tf_exec', methods=['GET'])
 @login_required
 def tf_exec():
@@ -316,7 +315,8 @@ def tf_init():
 
             flash('Initに失敗しました。実行結果を確認してください', 'error')
             return render_template('testapp/tf_init.html')
-    return render_template('testapp/tf_init.html')
+    active_workspace = get_active_workspace()
+    return render_template('testapp/tf_init.html', active_workspace=active_workspace)
 
 ##Terraform Initの実行結果確認
 @app.route('/view_init_output')
@@ -388,7 +388,8 @@ def tf_plan():
 
             flash('Planに失敗しました。実行結果を確認してください', 'error')
             return render_template('testapp/tf_plan.html')
-    return render_template('testapp/tf_plan.html')
+    active_workspace = get_active_workspace()
+    return render_template('testapp/tf_plan.html', active_workspace=active_workspace)
 
 ##Terraform Planの実行結果確認
 @app.route('/view_plan_output')
@@ -459,7 +460,8 @@ def tf_apply():
 
             flash('Applyに失敗しました。実行結果を確認してください', 'error')
             return render_template('testapp/tf_apply.html')
-    return render_template('testapp/tf_apply.html')
+    active_workspace = get_active_workspace()
+    return render_template('testapp/tf_apply.html', active_workspace=active_workspace)
 
 ##Terraform Applyの実行結果確認
 @app.route('/view_apply_output')
@@ -529,7 +531,8 @@ def tf_destroy():
 
             flash('Destroyに失敗しました。実行結果を確認してください', 'error')
             return render_template('testapp/tf_destroy.html')
-    return render_template('testapp/tf_destroy.html')
+    active_workspace = get_active_workspace()
+    return render_template('testapp/tf_destroy.html', active_workspace=active_workspace)
 
 ##Terraform Destroyの実行結果確認
 @app.route('/view_destroy_output')
