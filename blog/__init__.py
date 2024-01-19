@@ -8,7 +8,7 @@ app.config.from_object('blog.config')
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-from.models import employee, user
+from .models import employee, user
 
 login_manager = LoginManager()
 login_manager.init_app(app)
