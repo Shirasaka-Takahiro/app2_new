@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Terraform GUI</title>
+    <!-- Add Bootstrap CSS link here -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Terraform GUI</h1>
+        <a class="" href="{{ url_for('tf_init') }}">Terraform Init 実行画面へ移動する</a><br>
+    </div>
+</body>
+</html>
+{% endblock %}

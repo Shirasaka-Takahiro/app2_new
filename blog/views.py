@@ -273,6 +273,11 @@ def get_active_workspace():
 def tf_exec():
     return render_template('testapp/tf_exec.html')
 
+@app.route('/tf_exec/alb_ec2', methods=['GET'])
+@login_required
+def tf_exec_alb_ec2():
+    return render_template('testapp/alb_ec2.html')
+
 def format_terraform_output(output):
     # 改行で分割
     lines = output.decode('utf-8').split('\n')
@@ -287,7 +292,7 @@ def format_terraform_output(output):
     formatted_output = "<p>{}</p>".format('</p><p>'.join(formatted_lines))
     return formatted_output
 
-@app.route('/tf_exec/tf_init', methods=['POST', 'GET'])
+@app.route('/tf_exec/alb_ec2/tf_init', methods=['POST', 'GET'])
 @login_required
 def tf_init():
     if request.method == 'POST':
