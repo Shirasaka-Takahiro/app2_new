@@ -216,58 +216,6 @@ def create_aws_profile():
 
     return render_template('testapp/create_aws_profile.html')
 
-#Terraform Workspaceの作成
-@app.route('/create_tf_workspace', methods=['GET', 'POST'])
-def create_tf_workspace():
-    if request.method == 'POST':
-        # フォームから入力された情報を取得
-        workspace_name = request.form['workspace_name']
-
-        # デフォルトリージョンと出力形式を設定
-        try:
-            # ワークスペースの作成
-            subprocess.run(['terraform', 'workspace', 'new', workspace_name], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', check=True)
-            flash(f'Terraform Workspace "{workspace_name}"が作成されました', 'success')
-        except Exception as e:
-            flash(f'Workspaceの作成中にエラーが発生しました: {str(e)}', 'error')
-        return redirect(url_for('create_tf_workspace'))
-    
-    workspaces = get_terraform_workspaces()
-    active_workspace = get_active_workspace()
-    return render_template('testapp/create_tf_workspace.html', workspaces=workspaces, active_workspace=active_workspace)
-
-##アクティブなTerraform Workspaceの切り替え
-@app.route('/switch_workspace', methods=['POST'])
-def switch_workspace():
-    if request.method == 'POST':
-        selected_workspace = request.form['selected_workspace']
-        try:
-            subprocess.run(['terraform', 'workspace', 'select', selected_workspace], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', check=True)
-            flash(f'アクティブなワークスペースを {selected_workspace} に切り替えました', 'success')
-        except Exception as e:
-            flash(f'ワークスペースの切り替え中にエラーが発生しました: {str(e)}', 'error')
-        return redirect(url_for('create_tf_workspace'))
-
-##Terraform Workspaceの一覧を取得
-def get_terraform_workspaces():
-    try:
-        result = subprocess.run(['terraform', 'workspace', 'list'], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        workspaces = result.stdout.strip().split('\n')
-        return workspaces
-    except Exception as e:
-        flash(f'Terraformワークスペースの一覧取得中にエラーが発生しました: {str(e)}', 'error')
-        return []
-
-##Activeなワークスペースを取得
-def get_active_workspace():
-    try:
-        result = subprocess.run(['terraform', 'workspace', 'show'], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        active_workspace = result.stdout.strip()
-        return active_workspace
-    except Exception as e:
-        flash(f'アクティブなワークスペースの取得中にエラーが発生しました: {str(e)}', 'error')
-        return None
-
 @app.route('/tf_exec', methods=['GET'])
 @login_required
 def tf_exec():
@@ -292,9 +240,61 @@ def format_terraform_output(output):
     formatted_output = "<p>{}</p>".format('</p><p>'.join(formatted_lines))
     return formatted_output
 
+#Terraform Workspaceの作成
+@app.route('/tf_exec/alb_ec2/alb_ec2_create_tf_workspace', methods=['GET', 'POST'])
+def alb_ec2_create_tf_workspace():
+    if request.method == 'POST':
+        # フォームから入力された情報を取得
+        workspace_name = request.form['workspace_name']
+
+        # デフォルトリージョンと出力形式を設定
+        try:
+            # ワークスペースの作成
+            subprocess.run(['terraform', 'workspace', 'new', workspace_name], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', check=True)
+            flash(f'Terraform Workspace "{workspace_name}"が作成されました', 'success')
+        except Exception as e:
+            flash(f'Workspaceの作成中にエラーが発生しました: {str(e)}', 'error')
+        return redirect(url_for('alb_ec2_create_tf_workspace'))
+    
+    workspaces = alb_ec2_get_terraform_workspaces()
+    active_workspace = alb_ec2_get_active_workspace()
+    return render_template('testapp/create_tf_workspace.html', workspaces=workspaces, active_workspace=active_workspace)
+
+##アクティブなTerraform Workspaceの切り替え
+@app.route('/tf_exec/alb_ec2/switch_workspace', methods=['POST'])
+def alb_ec2_switch_workspace():
+    if request.method == 'POST':
+        selected_workspace = request.form['selected_workspace']
+        try:
+            subprocess.run(['terraform', 'workspace', 'select', selected_workspace], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', check=True)
+            flash(f'アクティブなワークスペースを {selected_workspace} に切り替えました', 'success')
+        except Exception as e:
+            flash(f'ワークスペースの切り替え中にエラーが発生しました: {str(e)}', 'error')
+        return redirect(url_for('alb_ec2_create_tf_workspace'))
+
+##Terraform Workspaceの一覧を取得
+def alb_ec2_get_terraform_workspaces():
+    try:
+        result = subprocess.run(['terraform', 'workspace', 'list'], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        workspaces = result.stdout.strip().split('\n')
+        return workspaces
+    except Exception as e:
+        flash(f'Terraformワークスペースの一覧取得中にエラーが発生しました: {str(e)}', 'error')
+        return []
+
+##Activeなワークスペースを取得
+def alb_ec2_get_active_workspace():
+    try:
+        result = subprocess.run(['terraform', 'workspace', 'show'], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        active_workspace = result.stdout.strip()
+        return active_workspace
+    except Exception as e:
+        flash(f'アクティブなワークスペースの取得中にエラーが発生しました: {str(e)}', 'error')
+        return None
+
 @app.route('/tf_exec/alb_ec2/tf_init', methods=['POST', 'GET'])
 @login_required
-def tf_init():
+def alb_ec2_tf_init():
     if request.method == 'POST':
         try:
             # terraform initを実行
@@ -320,13 +320,13 @@ def tf_init():
 
             flash('Initに失敗しました。実行結果を確認してください', 'error')
             return render_template('testapp/tf_init.html')
-    active_workspace = get_active_workspace()
+    active_workspace = alb_ec2_get_active_workspace()
     return render_template('testapp/tf_init.html', active_workspace=active_workspace)
 
 ##Terraform Initの実行結果確認
-@app.route('/view_init_output')
+@app.route('/tf_exec/alb_ec2/view_init_output')
 @login_required
-def view_init_output():
+def alb_ec2_view_init_output():
     try:
         with open('/home/vagrant/app2_new/blog/templates/testapp/init_output.html', 'r') as init_output_file:
             init_output = init_output_file.read()
@@ -338,9 +338,9 @@ def view_init_output():
 UPLOAD_DIR = '/home/vagrant/.ssh/example.pub'
 
 ##Terraform Plan 実行機能
-@app.route('/tf_exec/tf_plan', methods=['POST', 'GET'])
+@app.route('/tf_exec/alb_ec2/tf_plan', methods=['POST', 'GET'])
 @login_required
-def tf_plan():
+def alb_ec2_tf_plan():
     if request.method == 'POST':
         try:
             UPLOAD_DIR = '/home/vagrant/.ssh/'
@@ -393,13 +393,13 @@ def tf_plan():
 
             flash('Planに失敗しました。実行結果を確認してください', 'error')
             return render_template('testapp/tf_plan.html')
-    active_workspace = get_active_workspace()
+    active_workspace = alb_ec2_get_active_workspace()
     return render_template('testapp/tf_plan.html', active_workspace=active_workspace)
 
 ##Terraform Planの実行結果確認
-@app.route('/view_plan_output')
+@app.route('/tf_exec/alb_ec2/view_plan_output')
 @login_required
-def view_plan_output():
+def alb_ec2_view_plan_output():
     try:
         with open('/home/vagrant/app2_new/blog/templates/testapp/plan_output.html', 'r') as plan_output_file:
             plan_output = plan_output_file.read()
@@ -410,9 +410,9 @@ def view_plan_output():
 
 
 ##Terraform Apply 実行機能
-@app.route('/tf_exec/tf_apply', methods=['POST', 'GET'])
+@app.route('/tf_exec/alb_ec2/tf_apply', methods=['POST', 'GET'])
 @login_required
-def tf_apply():
+def alb_ec2_tf_apply():
     if request.method == 'POST':
         try:
             UPLOAD_DIR = '/home/vagrant/.ssh/'
@@ -465,13 +465,13 @@ def tf_apply():
 
             flash('Applyに失敗しました。実行結果を確認してください', 'error')
             return render_template('testapp/tf_apply.html')
-    active_workspace = get_active_workspace()
+    active_workspace = alb_ec2_get_active_workspace()
     return render_template('testapp/tf_apply.html', active_workspace=active_workspace)
 
 ##Terraform Applyの実行結果確認
-@app.route('/view_apply_output')
+@app.route('/tf_exec/alb_ec2/view_apply_output')
 @login_required
-def view_apply_output():
+def alb_ec2_view_apply_output():
     try:
         with open('/home/vagrant/app2_new/blog/templates/testapp/apply_output.html', 'r') as apply_output_file:
             apply_output = apply_output_file.read()
@@ -481,9 +481,9 @@ def view_apply_output():
         return redirect(url_for('tf_apply'))
 
 ##Terraform Destroy 実行機能
-@app.route('/tf_exec/tf_destroy', methods=['POST', 'GET'])
+@app.route('/tf_exec/alb_ec2/tf_destroy', methods=['POST', 'GET'])
 @login_required
-def tf_destroy():
+def alb_ec2_tf_destroy():
     if request.method == 'POST':
         try:
             UPLOAD_DIR = '/home/vagrant/.ssh/'
@@ -536,13 +536,13 @@ def tf_destroy():
 
             flash('Destroyに失敗しました。実行結果を確認してください', 'error')
             return render_template('testapp/tf_destroy.html')
-    active_workspace = get_active_workspace()
+    active_workspace = alb_ec2_get_active_workspace()
     return render_template('testapp/tf_destroy.html', active_workspace=active_workspace)
 
 ##Terraform Destroyの実行結果確認
-@app.route('/view_destroy_output')
+@app.route('/tf_exec/alb_ec2/view_destroy_output')
 @login_required
-def view_destroy_output():
+def alb_ec2_view_destroy_output():
     try:
         with open('/home/vagrant/app2_new/blog/templates/testapp/destroy_output.html', 'r') as destroy_output_file:
             destroy_output = destroy_output_file.read()
@@ -550,3 +550,20 @@ def view_destroy_output():
     except FileNotFoundError:
         flash('実行結果ファイルが見つかりません', 'error')
         return redirect(url_for('tf_destroy'))
+
+@app.route('/tf_exec/alb_ec2/tf_exec_alb_ec2_delete_tfvars', methods=['GET', 'POST'])
+@login_required
+def tf_exec_alb_ec2_delete_tfvars():
+    tfvars_path = '/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev/terraform.tfvars.json'
+
+    if request.method == 'POST':
+        # POSTリクエストがあった場合、削除処理を実行
+        if os.path.exists(tfvars_path):
+            os.remove(tfvars_path)
+            flash('tfvarsファイルを削除しました', 'success')
+        else:
+            flash('tfvarsファイルが見つかりません', 'error')
+        return render_template('testapp/tf_destroy.html')
+
+    # GETリクエストの場合、確認ダイアログを表示
+    return render_template('testapp/confirm_delete.html')

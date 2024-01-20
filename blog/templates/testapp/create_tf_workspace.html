@@ -37,7 +37,7 @@
         <h2>Active Workspace</h2>
         <p>{{ active_workspace }}</p>
 
-        <form method="POST" action="{{ url_for('switch_workspace') }}">
+        <form method="POST" action="{{ url_for('alb_ec2_switch_workspace') }}">
             <label for="selected_workspace">Switch to Workspace:</label>
             {% for workspace in workspaces %}
             <div class="form-check">

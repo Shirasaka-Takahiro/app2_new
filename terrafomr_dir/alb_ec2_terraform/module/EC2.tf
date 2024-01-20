@@ -50,5 +50,5 @@ resource "aws_eip" "eip_ec2" {
 ##Key Pair
 resource "aws_key_pair" "key" {
   key_name   = var.key_name
-  public_key = file("~/.ssh/example.pub")
+  public_key = file("/home/vagrant/.ssh/example.pub")
 }

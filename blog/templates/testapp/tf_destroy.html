@@ -48,8 +48,10 @@
             <button type="submit" class="btn btn-primary" name="action" value="destroy">Destroy</button>
         </form>
     </div>
-    <a class="" href="{{ url_for('view_destroy_output') }}" target="_blank">実行結果画面</a>
-    <a class="" href="{{ url_for('tf_exec') }}">戻る</a>
+    <a class="" href="{{ url_for('alb_ec2_view_destroy_output') }}" target="_blank">実行結果画面</a>
+    <a class="" href="{{ url_for('tf_exec_alb_ec2') }}">戻る</a>
+
+    <a class="" href="{{ url_for('tf_exec_alb_ec2_delete_tfvars') }}">tfvarsファイルを削除する</a>
 </body>
 </html>
 {% endblock %}
