@@ -295,6 +295,7 @@ def alb_ec2_get_active_workspace():
 @app.route('/tf_exec/alb_ec2/tf_init', methods=['POST', 'GET'])
 @login_required
 def alb_ec2_tf_init():
+    active_workspace = alb_ec2_get_active_workspace()
     if request.method == 'POST':
         try:
             # terraform initを実行
