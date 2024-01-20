@@ -18,10 +18,6 @@ output "public_ip" {
   value = aws_eip.eip_ec2.public_ip
 }
 
-output "private_ip" {
-  value = aws_instance.ec2-db.private_ip
-}
-
 output "alb_dns_name" {
   value = aws_lb.alb.dns_name
 }
