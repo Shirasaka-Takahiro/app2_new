@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Terraform GUI</title>
+    <!-- Add Bootstrap CSS link here -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Terraform Init 実行画面</h1>
+        <form method="POST">
+            <h2>Active Workspace</h2>
+            <p>{{ active_workspace }}</p>
+
+            <div class="form-group">
+                <label for="aws_access_key">AWS Access Key:</label>
+                <input type="text" class="form-control" id="aws_access_key" name="aws_access_key" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="aws_secret_key">AWS Secret Key:</label>
+                <input type="text" class="form-control" id="aws_secret_key" name="aws_secret_key" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="aws_region">AWS Region:</label>
+                <input type="text" class="form-control" id="aws_region" name="aws_region" required>
+            </div>
+            
+            
+            <button type="submit" class="btn btn-warning" name="action" value="init">Init</button>
+            <a class="" href="{{ url_for('alb_ec2_route53_view_init_output') }}" target="_blank">実行結果画面</a>
+            <a class="" href="{{ url_for('tf_exec_alb_ec2_route53') }}">戻る</a>
+        </form>
+    </div>
+</body>
+</html>
+{% endblock %}

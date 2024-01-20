@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Terraform GUI ALB + EC2</title>
+    <!-- Add Bootstrap CSS link here -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Terraform GUI ALB + EC2 + Route53</h1>
+        <a class="" href="{{ url_for('alb_ec2_route53_create_tf_workspace') }}">Terraform Workspace 作成画面へ移動する</a><br>
+        <a class="" href="{{ url_for('alb_ec2_route53_tf_init') }}">Terraform Init 実行画面へ移動する</a><br>
+        <!-- <a class="" href="{{ url_for('alb_ec2_tf_plan') }}">Terraform Plan 実行画面へ移動する</a><br> -->
+        <!-- <a class="" href="{{ url_for('alb_ec2_tf_apply') }}">Terraform Apply 実行画面へ移動する</a><br> -->
+        <!-- <a class="" href="{{ url_for('alb_ec2_tf_destroy') }}">Terraform Destroy 実行画面へ移動する</a><br> -->
+        <a class="" href="{{ url_for('tf_exec') }}">戻る</a>
+    </div>
+</body>
+</html>
+{% endblock %}

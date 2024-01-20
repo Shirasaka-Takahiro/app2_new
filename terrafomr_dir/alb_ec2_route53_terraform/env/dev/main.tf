@@ -1,12 +1,12 @@
 provider "aws" {
-  region  = var.regions["tokyo"]
+  region     = var.regions["tokyo"]
   access_key = var.access_key
   secret_key = var.secret_key
 }
 
 provider "aws" {
-  alias   = "us-east-1"
-  region  = var.regions["virginia"]
+  alias  = "us-east-1"
+  region = var.regions["virginia"]
 }
 
 terraform {
@@ -36,4 +36,7 @@ module "dev" {
   volume_type        = var.volume_type
   volume_size        = var.volume_size
   instance_id        = module.dev.instance_id
+  zone_id            = var.zone_id
+  zone_name          = var.zone_name
+  sub_domain_1       = var.sub_domain_1
 }
