@@ -1,6 +1,6 @@
 ##ALB
 resource "aws_lb" "alb" {
-  name               = "${var.general_config["project"]}-${var.general_config["env"]}-alb"
+  name               = "${var.general_config["project_name"]}-${var.general_config["env"]}-alb"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
@@ -9,18 +9,18 @@ resource "aws_lb" "alb" {
 
   access_logs {
     bucket  = aws_s3_bucket.bucket_alb_access_log.id
-    prefix  = var.general_config["project"]
+    prefix  = var.general_config["project_name"]
     enabled = true
   }
 
   tags = {
-    Name = "${var.general_config["project"]}-${var.general_config["env"]}-alb"
+    Name = "${var.general_config["project_name"]}-${var.general_config["env"]}-alb"
   }
 }
 
 ##Target Group
 resource "aws_lb_target_group" "tg" {
-  name             = "${var.general_config["project"]}-${var.general_config["env"]}-tg"
+  name             = "${var.general_config["project_name"]}-${var.general_config["env"]}-tg"
   target_type      = "instance"
   protocol_version = "HTTP1"
   port             = "80"
@@ -39,7 +39,7 @@ resource "aws_lb_target_group" "tg" {
   }
 
   tags = {
-    Name = "${var.general_config["project"]}-${var.general_config["env"]}-tg"
+    Name = "${var.general_config["project_name"]}-${var.general_config["env"]}-tg"
   }
 }
 

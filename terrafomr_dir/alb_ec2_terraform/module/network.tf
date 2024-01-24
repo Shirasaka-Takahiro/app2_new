@@ -5,7 +5,7 @@ resource "aws_vpc" "vpc" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = "${var.general_config["project"]}-${var.general_config["env"]}-vpc"
+    Name = "${var.general_config["project_name"]}-${var.general_config["env"]}-vpc"
   }
 }
 
@@ -18,7 +18,7 @@ resource "aws_subnet" "public_subnets" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "${var.general_config["project"]}-${var.general_config["env"]}-public-${substr(each.value.az, -2, 2)}"
+    Name = "${var.general_config["project_name"]}-${var.general_config["env"]}-public-${substr(each.value.az, -2, 2)}"
   }
 }
 
@@ -30,7 +30,7 @@ resource "aws_subnet" "private_subnets" {
   availability_zone = each.value.az
 
   tags = {
-    Name = "${var.general_config["project"]}-${var.general_config["env"]}-private-${substr(each.value.az, -2, 2)}"
+    Name = "${var.general_config["project_name"]}-${var.general_config["env"]}-private-${substr(each.value.az, -2, 2)}"
   }
 }
 
@@ -40,7 +40,7 @@ resource "aws_internet_gateway" "internet_gateway" {
   vpc_id = aws_vpc.vpc.id
 
   tags = {
-    Name = "${var.general_config["project"]}-${var.general_config["env"]}-igw"
+    Name = "${var.general_config["project_name"]}-${var.general_config["env"]}-igw"
   }
 }
 
@@ -50,7 +50,7 @@ resource "aws_route_table" "public_route_tables" {
   for_each = var.public_subnets.subnets
 
   tags = {
-    Name = "${var.general_config["project"]}-${var.general_config["env"]}-pubic-rtb-${substr(each.value.az, -2, 2)}"
+    Name = "${var.general_config["project_name"]}-${var.general_config["env"]}-pubic-rtb-${substr(each.value.az, -2, 2)}"
   }
 }
 
@@ -75,7 +75,7 @@ resource "aws_route_table" "private_route_tables" {
   for_each = var.private_subnets.subnets
 
   tags = {
-    Name = "${var.general_config["project"]}-${var.general_config["env"]}-private-rtb-${substr(each.value.az, -2, 2)}"
+    Name = "${var.general_config["project_name"]}-${var.general_config["env"]}-private-rtb-${substr(each.value.az, -2, 2)}"
   }
 }
 

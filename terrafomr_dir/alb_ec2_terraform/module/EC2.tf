@@ -14,7 +14,7 @@ resource "aws_instance" "ec2-web" {
   }
 
   tags = {
-    Name = "${var.general_config["project"]}-${var.general_config["env"]}-web01"
+    Name = "${var.general_config["project_name"]}-${var.general_config["env"]}-web01"
   }
 }
 
@@ -24,7 +24,7 @@ resource "aws_eip" "eip_ec2" {
   instance = aws_instance.ec2-web.id
 
   tags = {
-    Name = "${var.general_config["project"]}-${var.general_config["env"]}-eip01"
+    Name = "${var.general_config["project_name"]}-${var.general_config["env"]}-eip01"
   }
 }
 

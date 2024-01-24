@@ -367,9 +367,9 @@ def alb_ec2_view_init_output():
         return redirect(url_for('tf_init'))
 
 # プロジェクトの init_output 表示ルート
-@app.route('/view_project_output/<int:project_id>')
+@app.route('/view_project_init_output/<int:project_id>')
 @login_required
-def view_project_output(project_id):
+def view_project_init_output(project_id):
     project = Project.query.get(project_id)
 
     if project:
@@ -397,59 +397,68 @@ UPLOAD_DIR = '/home/vagrant/.ssh/example.pub'
 @login_required
 def alb_ec2_tf_plan():
     if request.method == 'POST':
-        try:
-            UPLOAD_DIR = '/home/vagrant/.ssh/'
-            public_key = request.form.get('public_key')
-            if public_key:
-                # セキュアなファイル名を生成して保存
-                new_filename = 'example.pub'
-                save_path = os.path.join(UPLOAD_DIR, new_filename)
-                with open(save_path, 'w') as f:
-                    f.write(public_key)
+        project_id = request.form['project_id']
+        project = Project.query.get(project_id)
+        if project:
+            try:
+                UPLOAD_DIR = '/home/vagrant/.ssh/'
+                public_key = request.form.get('public_key')
+                if public_key:
+                    # セキュアなファイル名を生成して保存
+                    new_filename = 'example.pub'
+                    save_path = os.path.join(UPLOAD_DIR, new_filename)
+                    with open(save_path, 'w') as f:
+                        f.write(public_key)
 
-            ##terraform.tfvarsの作成
-            project = request.form.get('project')
-            env = request.form.get('env')
-            access_key = request.form.get('aws_access_key')
-            secret_key = request.form.get('aws_secret_key')
+                ##terraform.tfvarsの作成
+                project_name = request.form.get('project_name')
+                env = request.form.get('env')
+                access_key = request.form.get('aws_access_key')
+                secret_key = request.form.get('aws_secret_key')
 
-            tf_vars = {
-                "general_config": {
-                    "project": project,
-                    "env": env
-                },
-                "access_key": access_key,
-                "secret_key": secret_key
-            }
+                tf_vars = {
+                    "general_config": {
+                        "project_name": project_name,
+                        "env": env
+                    },
+                    "access_key": access_key,
+                    "secret_key": secret_key
+                }
 
-            with open('/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev/terraform.tfvars.json', 'w') as f:
-                json.dump(tf_vars, f)
+                with open('/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev/terraform.tfvars.json', 'w') as f:
+                    json.dump(tf_vars, f)
         
-            # コマンドを実行し、標準出力をバイト文字列として取得
-            plan_result = subprocess.run(['terraform', 'plan'], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                # terraform planを実行
+                plan_result = subprocess.run(['terraform', 'plan'], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-            # Terraform planの出力を整形してファイルに書き込む
-            formatted_output = format_terraform_output(plan_result.stdout)
+                # Terraform planの出力を整形してファイルに書き込む
+                formatted_output = format_terraform_output(plan_result.stdout)
 
-            # Terraform planの出力をファイルに書き込む
-            with open('/home/vagrant/app2_new/blog/templates/testapp/plan_output.html', 'w') as plan_output_file:
-                plan_output_file.write(formatted_output)
+                # Terraform planの出力をファイルに書き込む
+                with open('/home/vagrant/app2_new/blog/templates/testapp/plan_output.html', 'w') as plan_output_file:
+                    plan_output_file.write(formatted_output)
 
-                flash('Planが成功しました', 'success')
+                    new_execution = TerraformExecution(output_path='/home/vagrant/app2_new/blog/templates/testapp/plan_output.html', project=project)
+                    db.session.add(new_execution)
+                    db.session.commit()
+
+                    flash('Planが成功しました', 'success')
+                    return render_template('testapp/tf_plan.html')
+
+            except subprocess.CalledProcessError as e:
+                # エラーメッセージを整形してファイルに書き込む
+                error_output = e.stderr.decode('utf-8')
+                formatted_error_output = format_terraform_output(error_output)
+
+                with open('/home/vagrant/app2_new/blog/templates/testapp/plan_output.html', 'w') as plan_output_file:
+                    plan_output_file.write(formatted_error_output)
+
+                flash('Planに失敗しました。実行結果を確認してください', 'error')
                 return render_template('testapp/tf_plan.html')
-
-        except subprocess.CalledProcessError as e:
-            # エラーメッセージを整形してファイルに書き込む
-            error_output = e.stderr.decode('utf-8')
-            formatted_error_output = format_terraform_output(error_output)
-
-            with open('/home/vagrant/app2_new/blog/templates/testapp/plan_output.html', 'w') as plan_output_file:
-                plan_output_file.write(formatted_error_output)
-
-            flash('Planに失敗しました。実行結果を確認してください', 'error')
-            return render_template('testapp/tf_plan.html')
+            
     active_workspace = alb_ec2_get_active_workspace()
-    return render_template('testapp/tf_plan.html', active_workspace=active_workspace)
+    user_projects = current_user.projects
+    return render_template('testapp/tf_plan.html', active_workspace=active_workspace, user_projects=user_projects)
 
 ##Terraform Planの実行結果確認
 @app.route('/tf_exec/alb_ec2/view_plan_output')
@@ -462,6 +471,30 @@ def alb_ec2_view_plan_output():
     except FileNotFoundError:
         flash('実行結果ファイルが見つかりません', 'error')
         return redirect(url_for('tf_plan'))
+
+# プロジェクトの plan_output 表示ルート
+@app.route('/view_project_plan_output/<int:project_id>')
+@login_required
+def view_project_plan_output(project_id):
+    project = Project.query.get(project_id)
+
+    if project:
+        try:
+            # 最新の TerraformExecution レコードを取得
+            latest_execution = TerraformExecution.query.filter_by(project_relation=project).order_by(TerraformExecution.timestamp.desc()).first()
+
+            if latest_execution:
+                with open(latest_execution.output_path, 'r') as init_output_file:
+                    init_output = init_output_file.read()
+                return render_template('testapp/plan_output.html', init_output=init_output)
+            else:
+                flash('実行結果が見つかりません', 'error')
+        except FileNotFoundError:
+            flash('実行結果ファイルが見つかりません', 'error')
+    else:
+        flash('プロジェクトが見つかりません', 'error')
+
+    return redirect(url_for('dashboard'))
 
 
 ##Terraform Apply 実行機能

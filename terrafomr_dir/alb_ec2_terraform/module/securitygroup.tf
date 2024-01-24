@@ -19,7 +19,7 @@ resource "aws_security_group" "common" {
   }
 
   tags = {
-    Name = "${var.general_config["project"]}-${var.general_config["env"]}-common-sg"
+    Name = "${var.general_config["project_name"]}-${var.general_config["env"]}-common-sg"
   }
 }
 
@@ -44,7 +44,7 @@ resource "aws_security_group" "ec2" {
   }
 
   tags = {
-    Name = "${var.general_config["project"]}-${var.general_config["env"]}-ec2-sg"
+    Name = "${var.general_config["project_name"]}-${var.general_config["env"]}-ec2-sg"
   }
 }
 
@@ -78,6 +78,6 @@ resource "aws_security_group" "alb" {
   }
 
   tags = {
-    Name = "${var.general_config["project"]}-${var.general_config["env"]}-alb-sg"
+    Name = "${var.general_config["project_name"]}-${var.general_config["env"]}-alb-sg"
   }
 }

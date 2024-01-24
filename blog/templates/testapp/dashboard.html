@@ -8,7 +8,8 @@
         {% for project in user_projects %}
             <li class="list-group-item">
                 {{ project.name }}
-                <a href="{{ url_for('view_project_output', project_id=project.id) }}" class="btn btn-primary btn-sm float-right" target="_blank">表示</a>
+                <a href="{{ url_for('view_project_init_output', project_id=project.id) }}" class="btn btn-warning btn-sm float-right" target="_blank">Init結果</a>
+                <a href="{{ url_for('view_project_plan_output', project_id=project.id) }}" class="btn btn-primary btn-sm float-right" target="_blank">Plan結果</a>
             </li>
         {% endfor %}
     </ul>

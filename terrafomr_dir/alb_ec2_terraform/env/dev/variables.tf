@@ -2,7 +2,7 @@
 variable "general_config" {
   type = map(any)
   default = {
-    project = "example"
+    project_name = "example"
     env     = "dev"
   }
 }
