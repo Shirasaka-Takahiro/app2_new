@@ -19,6 +19,9 @@
           {% endif %}
         {% endfor %}
     </ul>
+  <a class="" href="{{ url_for('create_project') }}">プロジェクト作成画面へ移動する
+  <br />
+  <a class="" href="{{ url_for('dashboard') }}">プロジェクト一覧画面へ移動する
   </div>
 <script src="{{ url_for('static', filename='javascript/sample.js') }}"></script>
 {% endblock %}

@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">プロジェクト作成</h1>
+    <form method="POST">
+        <div class="form-group">
+            <label for="project_name">プロジェクト名:</label>
+            <input type="text" class="form-control" id="project_name" name="project_name" required>
+        </div>
+        <button type="submit" class="btn btn-primary" name="action" value="create_project">プロジェクト作成</button>
+    </form>
+</div>
+{% endblock %}

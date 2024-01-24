@@ -16,6 +16,15 @@
             <p>{{ active_workspace }}</p>
 
             <div class="form-group">
+                <label for="project">Project:</label>
+                <select class="form-control" id="project" name="project_id" required>
+                    {% for project in user_projects %}
+                        <option value="{{ project.id }}">{{ project.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
                 <label for="aws_access_key">AWS Access Key:</label>
                 <input type="text" class="form-control" id="aws_access_key" name="aws_access_key" required>
             </div>

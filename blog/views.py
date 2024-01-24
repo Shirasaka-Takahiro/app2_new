@@ -4,6 +4,8 @@ from random import randint
 from blog import db
 from blog.models.employee import Employee
 from blog.models.user import User
+from blog.models.user import Project
+from blog.models.user import TerraformExecution
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from blog import login_manager
@@ -177,6 +179,25 @@ def user_detail(id):
     user = User.query.get(id)
     return render_template('testapp/user_detail.html', user=user)
 
+# Create Project
+@app.route('/create_project', methods=['POST', 'GET'])
+@login_required
+def create_project():
+    if request.method == 'POST':
+        project_name = request.form['project_name']
+        new_project = Project(name=project_name, user=current_user)
+        db.session.add(new_project)
+        db.session.commit()
+        flash('プロジェクトが作成されました', 'success')
+        return redirect(url_for('dashboard'))
+    return render_template('testapp/project.html')
+
+# Dashboard route
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    user_projects = current_user.projects
+    return render_template('testapp/dashboard.html', user_projects=user_projects)
 
 #AWSProfileの作成
 @app.route('/create_aws_profile', methods=['GET', 'POST'])
@@ -297,32 +318,41 @@ def alb_ec2_get_active_workspace():
 def alb_ec2_tf_init():
     active_workspace = alb_ec2_get_active_workspace()
     if request.method == 'POST':
-        try:
-            # terraform initを実行
-            init_result = subprocess.run(['terraform', 'init'], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        project_id = request.form['project_id']
+        project = Project.query.get(project_id)
+        if project:
+            try:
+                # terraform initを実行
+                init_result = subprocess.run(['terraform', 'init'], cwd='/home/vagrant/app2_new/terrafomr_dir/alb_ec2_terraform/env/dev', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-            # Terraform initの出力を整形してファイルに書き込む
-            formatted_output = format_terraform_output(init_result.stdout)
+                # Terraform initの出力を整形してファイルに書き込む
+                formatted_output = format_terraform_output(init_result.stdout)
 
-            # Terraform initの出力をファイルに書き込む
-            with open('/home/vagrant/app2_new/blog/templates/testapp/init_output.html', 'w') as init_output_file:
-                init_output_file.write(formatted_output)
+                # Terraform initの出力をファイルに書き込む
+                with open('/home/vagrant/app2_new/blog/templates/testapp/init_output.html', 'w') as init_output_file:
+                    init_output_file.write(formatted_output)
+                
+                new_execution = TerraformExecution(output_path='/home/vagrant/app2_new/blog/templates/testapp/init_output.html', project=project)
+                db.session.add(new_execution)
+                db.session.commit()
 
-            flash('Initが成功しました', 'success')
-            return render_template('testapp/tf_init.html')
+                flash('Initが成功しました', 'success')
+                return render_template('testapp/tf_init.html')
 
-        except subprocess.CalledProcessError as e:
-            # エラーメッセージを整形してファイルに書き込む
-            error_output = e.stderr.decode('utf-8')
-            formatted_error_output = format_terraform_output(error_output)
+            except subprocess.CalledProcessError as e:
+                # エラーメッセージを整形してファイルに書き込む
+                error_output = e.stderr.decode('utf-8')
+                formatted_error_output = format_terraform_output(error_output)
 
-            with open('/home/vagrant/app2_new/blog/templates/testapp/init_output.html', 'w') as init_output_file:
-                init_output_file.write(formatted_error_output)
+                with open('/home/vagrant/app2_new/blog/templates/testapp/init_output.html', 'w') as init_output_file:
+                    init_output_file.write(formatted_error_output)
 
-            flash('Initに失敗しました。実行結果を確認してください', 'error')
-            return render_template('testapp/tf_init.html')
+                flash('Initに失敗しました。実行結果を確認してください', 'error')
+                return render_template('testapp/tf_init.html')
+    
     active_workspace = alb_ec2_get_active_workspace()
-    return render_template('testapp/tf_init.html', active_workspace=active_workspace)
+    user_projects = current_user.projects
+    return render_template('testapp/tf_init.html', active_workspace=active_workspace, user_projects=user_projects)
 
 ##Terraform Initの実行結果確認
 @app.route('/tf_exec/alb_ec2/view_init_output')
@@ -335,6 +365,30 @@ def alb_ec2_view_init_output():
     except FileNotFoundError:
         flash('実行結果ファイルが見つかりません', 'error')
         return redirect(url_for('tf_init'))
+
+# プロジェクトの init_output 表示ルート
+@app.route('/view_project_output/<int:project_id>')
+@login_required
+def view_project_output(project_id):
+    project = Project.query.get(project_id)
+
+    if project:
+        try:
+            # 最新の TerraformExecution レコードを取得
+            latest_execution = TerraformExecution.query.filter_by(project_relation=project).order_by(TerraformExecution.timestamp.desc()).first()
+
+            if latest_execution:
+                with open(latest_execution.output_path, 'r') as init_output_file:
+                    init_output = init_output_file.read()
+                return render_template('testapp/init_output.html', init_output=init_output)
+            else:
+                flash('実行結果が見つかりません', 'error')
+        except FileNotFoundError:
+            flash('実行結果ファイルが見つかりません', 'error')
+    else:
+        flash('プロジェクトが見つかりません', 'error')
+
+    return redirect(url_for('dashboard'))
 
 UPLOAD_DIR = '/home/vagrant/.ssh/example.pub'
 
