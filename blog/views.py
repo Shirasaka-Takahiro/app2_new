@@ -400,6 +400,7 @@ def alb_ec2_get_active_workspace():
         flash(f'アクティブなワークスペースの取得中にエラーが発生しました: {str(e)}', 'error')
         return None
 
+##Terraform Init実行機能
 @app.route('/tf_exec/alb_ec2/tf_init', methods=['POST', 'GET'])
 @login_required
 def alb_ec2_tf_init():
@@ -819,10 +820,10 @@ def tf_exec_alb_ec2_delete_tfvars():
         # POSTリクエストがあった場合、削除処理を実行
         if os.path.exists(tfvars_path):
             os.remove(tfvars_path)
-            flash('tfvarsファイルを削除しました', 'success')
         else:
             flash('tfvarsファイルが見つかりません', 'error')
-        return render_template('testapp/tf_destroy.html')
+    return render_template('testapp/tf_destroy.html')
+    flash('tfvarsファイルを削除しました', 'success')
 
 @app.route('/tf_exec/alb_ec2_route53', methods=['GET'])
 @login_required

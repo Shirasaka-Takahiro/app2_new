@@ -11,7 +11,7 @@
 <body>
     <div class="container mt-5">
         <h1 class="mb-4">Terraform Apply 実行画面</h1>
-        <form method="POST">
+        <form method="POST" onsubmit="return handleApply()">
             <h2>Active Workspace</h2>
             <p>{{ active_workspace }}</p>
 
@@ -37,6 +37,8 @@
             <div class="form-group">
                 <label for="aws_region">AWS Region:</label>
                 <input type="text" class="form-control" id="aws_region" name="aws_region" required>
+            </div>
+
             <div class="form-group">
                 <label for="project_name">Project Name:</label>
                 <input type="text" class="form-control" id="project_name" name="project_name" required>
@@ -55,11 +57,22 @@
                 </div>
             </form>
             
-            <button type="submit" class="btn btn-success" name="action" value="apply">Apply</button>
+            <button type="submit" class="btn btn-success" id="applyButton" name="action" value="apply">
+                <span id="applySpinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                Apply
+            </button>
+            <a class="" href="{{ url_for('alb_ec2_view_apply_output') }}" target="_blank">実行結果画面</a>
+            <a class="" href="{{ url_for('tf_exec_alb_ec2') }}">戻る</a>
         </form>
     </div>
-    <a class="" href="{{ url_for('alb_ec2_view_apply_output') }}" target="_blank">実行結果画面</a>
-    <a class="" href="{{ url_for('tf_exec_alb_ec2') }}">戻る</a>
+    <script>
+        function handleApply() {
+            // ボタンを無効にし、ぐるぐる回るアイコンを表示する
+            document.getElementById("applyButton").disabled = true;
+            document.getElementById("applySpinner").style.display = "inline-block";
+            return true; // フォームを送信する
+        }
+    </script>
 </body>
 </html>
 {% endblock %}
