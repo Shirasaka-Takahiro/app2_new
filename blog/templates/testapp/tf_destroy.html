@@ -61,7 +61,7 @@
     <a class="" href="{{ url_for('alb_ec2_view_destroy_output') }}" target="_blank">実行結果画面</a>
     <a class="" href="{{ url_for('tf_exec_alb_ec2') }}">戻る</a>
 
-    <a class="" href="{{ url_for('tf_exec_alb_ec2_delete_tfvars') }}">tfvarsファイルを削除する</a>
+    <a class="" href="{{ url_for('tf_exec_alb_ec2_delete_tfvars') }}" onclick="return confirm('本当に削除しますか？')">tfvarsファイルを削除する </a>
 </body>
 </html>
 {% endblock %}

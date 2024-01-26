@@ -143,7 +143,7 @@ def signup():
         password = request.form.get('password')
         user = User(
             username=username, 
-            password=generate_password_hash(password, method='sha256')
+            password=generate_password_hash(password, method='sha256'),
         )
         db.session.add(user)
         db.session.commit()
@@ -151,6 +151,98 @@ def signup():
         return redirect(url_for('index'))
     else:
         return render_template('testapp/signup.html')
+
+##Adminユーザーの追加画面
+##ユーザー認証機能
+@app.route('/signup_admin', methods=['GET', 'POST'])
+def signup_admin():
+    if request.method == "POST":
+        username = request.form.get('username')
+        password = request.form.get('password')
+        is_admin = 'is_admin' in request.form
+        user = User(
+            username=username, 
+            password=generate_password_hash(password, method='sha256'),
+            is_admin=is_admin
+        )
+        db.session.add(user)
+        db.session.commit()
+        flash('ユーザー登録が完了しました。ログインしてください。', 'success')
+        return redirect(url_for('index'))
+    else:
+        return render_template('testapp/signup_admin.html')
+
+##ユーザー一覧画面
+@app.route('/user_list')
+@login_required
+def user_list():
+    # 管理者ユーザーのみがアクセスできるようにする
+    if not current_user.is_admin:
+        flash('アクセス権限がありません。', 'error')
+        return redirect(url_for('index'))
+
+    users = User.query.all()
+    return render_template('testapp/user_list.html', users=users)
+
+# ユーザー詳細画面
+@app.route('/user_detail/<int:user_id>')
+@login_required
+def user_detail(user_id):
+    # 管理者ユーザーのみがアクセスできるようにする
+    if not current_user.is_admin:
+        flash('アクセス権限がありません。', 'error')
+        return redirect(url_for('index'))
+
+    user = User.query.get(user_id)
+    if user:
+        return render_template('testapp/user_detail.html', user=user)
+    else:
+        flash('指定されたユーザーが存在しません。', 'error')
+        return redirect(url_for('user_list'))
+
+# ユーザー編集画面
+@app.route('/user_edit/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def user_edit(user_id):
+    # 管理者ユーザーのみがアクセスできるようにする
+    if not current_user.is_admin:
+        flash('アクセス権限がありません。', 'error')
+        return redirect(url_for('index'))
+
+    user = User.query.get(user_id)
+    if not user:
+        flash('指定されたユーザーが存在しません。', 'error')
+        return redirect(url_for('user_list'))
+
+    if request.method == 'POST':
+        # ユーザー情報を更新
+        user.username = request.form['username']
+        user.is_admin = 'is_admin' in request.form
+        db.session.commit()
+        flash('ユーザー情報を更新しました。', 'success')
+        return redirect(url_for('user_list'))
+
+    return render_template('testapp/user_edit.html', user=user)
+
+# ユーザー削除画面
+@app.route('/user_delete/<int:user_id>')
+@login_required
+def user_delete(user_id):
+    # 管理者ユーザーのみがアクセスできるようにする
+    if not current_user.is_admin:
+        flash('アクセス権限がありません。', 'error')
+        return redirect(url_for('index'))
+
+    user = User.query.get(user_id)
+    if not user:
+        flash('指定されたユーザーが存在しません。', 'error')
+        return redirect(url_for('user_list'))
+
+    # ユーザーを削除
+    db.session.delete(user)
+    db.session.commit()
+    flash('ユーザーを削除しました。', 'success')
+    return redirect(url_for('user_list'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -173,11 +265,6 @@ def logout():
     logout_user()
     flash('ログアウトに成功しました。', 'success')
     return redirect(url_for('index'))
-
-@app.route('/user_detail/<int:id>', methods=['GET'])
-def user_detail(id):
-    user = User.query.get(id)
-    return render_template('testapp/user_detail.html', user=user)
 
 # Create Project
 @app.route('/create_project', methods=['POST', 'GET'])
@@ -736,9 +823,6 @@ def tf_exec_alb_ec2_delete_tfvars():
         else:
             flash('tfvarsファイルが見つかりません', 'error')
         return render_template('testapp/tf_destroy.html')
-
-    # GETリクエストの場合、確認ダイアログを表示
-    return render_template('testapp/confirm_delete.html')
 
 @app.route('/tf_exec/alb_ec2_route53', methods=['GET'])
 @login_required

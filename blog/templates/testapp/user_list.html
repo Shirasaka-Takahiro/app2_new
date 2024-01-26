@@ -1,0 +1,28 @@
+{% extends 'layout.html' %}
+{% block content %}
+  <h1>ユーザー一覧</h1>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>ユーザー名</th>
+        <th>管理者</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+        <tr>
+          <td>{{ user.id }}</td>
+          <td>{{ user.username }}</td>
+          <td>{% if user.is_admin %}Yes{% else %}No{% endif %}</td>
+          <td>
+            <a href="{{ url_for('user_detail', user_id=user.id) }}" class="btn btn-primary btn-sm float-right">詳細</a>
+            <a href="{{ url_for('user_edit', user_id=user.id) }}" class="btn btn-success btn-sm float-right">編集</a>
+            <a href="{{ url_for('user_delete', user_id=user.id) }}" class="btn btn-danger btn-sm float-right" onclick="return confirm('本当に削除しますか？')">削除</a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

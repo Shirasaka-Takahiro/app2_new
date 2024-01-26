@@ -1,0 +1,12 @@
+{% extends 'layout.html' %}
+{% block content %}
+  <h1>ユーザー削除</h1>
+  <p>ユーザーID: {{ user.id }}</p>
+  <p>ユーザー名: {{ user.username }}</p>
+  <p>管理者: {% if user.is_admin %}Yes{% else %}No{% endif %}</p>
+  <p>本当に削除しますか？</p>
+  <form method="post" action="{{ url_for('user_delete', user_id=user.id) }}">
+    <button type="submit" class="btn btn-danger">削除</button>
+    <a href="{{ url_for('user_list') }}" class="btn btn-secondary">キャンセル</a>
+  </form>
+{% endblock %}

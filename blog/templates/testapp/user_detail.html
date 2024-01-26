@@ -1,25 +1,9 @@
-{% extends "layout.html" %}
-
+<!-- user_detail.html -->
+{% extends 'layout.html' %}
 {% block content %}
-<div class="container mt-4">
-  <div class="row mb-4">
-    <div class="col-9">
-      <h2>ユーザー詳細</h2>
-    </div>
-  </div>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col">名前</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row">{{ user.id }}</th>
-              <td>{{ user.name }}</td>
-            </tr>
-          </tbody>
-    </table>
-</div>
+  <h1>ユーザー詳細</h1>
+  <p>ID: {{ user.id }}</p>
+  <p>ユーザー名: {{ user.username }}</p>
+  <p>管理者: {% if user.is_admin %}Yes{% else %}No{% endif %}</p>
+  <a href="{{ url_for('user_list') }}">戻る</a>
 {% endblock %}
