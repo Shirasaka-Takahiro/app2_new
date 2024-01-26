@@ -332,9 +332,12 @@ def alb_ec2_tf_init():
                 with open('/home/vagrant/app2_new/blog/templates/testapp/init_output.html', 'w') as init_output_file:
                     init_output_file.write(formatted_output)
                 
-                new_execution = TerraformExecution(output_path='/home/vagrant/app2_new/blog/templates/testapp/init_output.html', project=project)
-                db.session.add(new_execution)
-                db.session.commit()
+                # ユーザーがログインしていることを確認し、ログインしていればuser_idを取得
+                if current_user.is_authenticated:
+                    user_id = current_user.id
+                    new_execution = TerraformExecution(output_path='/home/vagrant/app2_new/blog/templates/testapp/init_output.html', project=project, user_id=user_id)
+                    db.session.add(new_execution)
+                    db.session.commit()
 
                 flash('Initが成功しました', 'success')
                 return render_template('testapp/tf_init.html')
@@ -439,7 +442,9 @@ def alb_ec2_tf_plan():
                 with open('/home/vagrant/app2_new/blog/templates/testapp/plan_output.html', 'w') as plan_output_file:
                     plan_output_file.write(formatted_output)
 
-                    new_execution = TerraformExecution(output_path='/home/vagrant/app2_new/blog/templates/testapp/plan_output.html', project=project)
+                if current_user.is_authenticated:
+                    user_id = current_user.id
+                    new_execution = TerraformExecution(output_path='/home/vagrant/app2_new/blog/templates/testapp/plan_output.html', project=project, user_id=user_id)
                     db.session.add(new_execution)
                     db.session.commit()
 
@@ -549,7 +554,9 @@ def alb_ec2_tf_apply():
                 with open('/home/vagrant/app2_new/blog/templates/testapp/apply_output.html', 'w') as apply_output_file:
                     apply_output_file.write(formatted_output)
 
-                    new_execution = TerraformExecution(output_path='/home/vagrant/app2_new/blog/templates/testapp/apply_output.html', project=project)
+                if current_user.is_authenticated:
+                    user_id = current_user.id
+                    new_execution = TerraformExecution(output_path='/home/vagrant/app2_new/blog/templates/testapp/apply_output.html', project=project, user_id=user_id)
                     db.session.add(new_execution)
                     db.session.commit()
 
@@ -656,7 +663,9 @@ def alb_ec2_tf_destroy():
                 with open('/home/vagrant/app2_new/blog/templates/testapp/destroy_output.html', 'w') as destroy_output_file:
                     destroy_output_file.write(formatted_output)
 
-                    new_execution = TerraformExecution(output_path='/home/vagrant/app2_new/blog/templates/testapp/destroy_output.html', project=project)
+                if current_user.is_authenticated:
+                    user_id = current_user.id
+                    new_execution = TerraformExecution(output_path='/home/vagrant/app2_new/blog/templates/testapp/destroy_output.html', project=project, user_id=user_id)
                     db.session.add(new_execution)
                     db.session.commit()
 
@@ -690,7 +699,7 @@ def alb_ec2_view_destroy_output():
         flash('実行結果ファイルが見つかりません', 'error')
         return redirect(url_for('tf_destroy'))
 
-# プロジェクトの plan_output 表示ルート
+# プロジェクトの destroy_output 表示ルート
 @app.route('/view_project_destroy_output/<int:project_id>')
 @login_required
 def view_project_destroy_output(project_id):

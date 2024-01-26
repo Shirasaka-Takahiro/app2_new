@@ -22,3 +22,7 @@ class TerraformExecution(db.Model):
     # プロジェクトに対する外部キー制約とインデックスの追加
     project_id = db.Column(db.Integer, db.ForeignKey('project.id', ondelete='CASCADE'), index=True, nullable=False)
     project_relation = db.relationship('Project', backref=db.backref('executions', lazy=True))
+
+    # ユーザーに対する外部キー制約とインデックスの追加
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_relation = db.relationship('User', backref=db.backref('executions', lazy=True))
